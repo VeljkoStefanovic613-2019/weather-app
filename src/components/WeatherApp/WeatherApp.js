@@ -15,8 +15,23 @@ export const WeatherApp = () => {
 
     const [wicon, setWicon] = useState(cloud_icon);
     const [defaultCity] = useState("Kragujevac");
+    const [searchValue, setSearchValue] = useState("");
 
-    // Empty dependency array ensures useEffect runs only once after the initial render
+    const handleSearch = () =>{
+        if(searchValue.trim()===""){
+            toast.error("Please enter a city for search!",{
+                closeButton: true,
+                position: "top-center",
+                autoClose: 5000,
+                closeOnClick: true
+                });
+        }else{
+            search(searchValue);
+            setSearchValue("");
+        }
+    }
+
+    
     const search =useCallback( async (city) => {
         const url = `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${api_key}&units=metric`;
 
@@ -34,38 +49,32 @@ export const WeatherApp = () => {
 
         setWeatherIcon(data.weather[0].icon);
     },[api_key]);
+
+
     useEffect(() => {
         search(defaultCity);
     }, [defaultCity, search]);
 
     const setWeatherIcon = (iconCode) => {
-        if (iconCode === "01d" || iconCode === "01n") {
-            setWicon(clear_icon);
-        } else if (iconCode === "02d" || iconCode === "02n" || iconCode === "03d" || iconCode === "03n") {
-            setWicon(cloud_icon);
-        } else if (iconCode === "04d" || iconCode === "04n") {
-            setWicon(drizzle_icon);
-        } else if (iconCode === "09d" || iconCode === "09n" || iconCode === "10d" || iconCode === "10n") {
-            setWicon(rain_icon);
-        } else if (iconCode === "13d" || iconCode === "13n") {
-            setWicon(snow_icon);
-        } else {
-            setWicon(clear_icon);
-        }
+        // Construct the URL for fetching the weather icon
+        const iconUrl = `http://openweathermap.org/img/wn/${iconCode}.png`;
+    
+        // Set the wicon state to the constructed icon URL
+        setWicon(iconUrl);
     }
 
     const handleKeyPress = (event) => {
         if (event.key === 'Enter') {
-            const element = document.getElementsByName("search");
-            if (element[0].value !== "") {
-                search(element[0].value);
-            }else {
+            if (searchValue.trim() === "") {
                 toast.error("Please enter a city for search!",{
                 closeButton: true,
                 position: "top-center",
                 autoClose: 5000,
-        closeOnClick: true
-                });
+                closeOnClick: true
+            });
+            }else {
+                search(searchValue);
+                setSearchValue("");
             }
         }
     }
@@ -79,13 +88,15 @@ export const WeatherApp = () => {
                     className="flex w-362 h-20 bg-customBackground border-none outline-none rounded-40 pl-10 text-xl font-normal"
                     name="search"
                     placeholder="Search"
-                    onKeyPress={handleKeyPress} />
-                    <div className="flex justify-center items-center w-20 h-20 bg-customBackground rounded-40 cursor-pointer" onClick={() => search(document.getElementsByName("search")[0].value)}>
+                    onKeyPress={handleKeyPress} 
+                    value={searchValue}
+                    onChange={(e) => setSearchValue(e.target.value)}/>
+                    <div className="flex justify-center items-center w-20 h-20 bg-customBackground rounded-40 cursor-pointer" onClick={handleSearch}>
                         <img src={search_icon} alt="" />
                     </div>
             </div>
             <div className="flex justify-center mt-7 h-15">
-                <img src={wicon} alt="" />
+                <img src={wicon} alt="" className="h-44" />
             </div>
             <div className="flex justify-center text-white text-6xl font-normal" name="temperature">0°C</div>
             <div className="flex justify-center text-white text-7xl font-bold" name="location">Kragujevac</div>
